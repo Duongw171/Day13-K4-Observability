@@ -40,21 +40,9 @@ class JsonlFileProcessor:
 
 
 def scrub_event(_: Any, __: str, event_dict: dict[str, Any]) -> dict[str, Any]:
-    """Scrub PII from the entire event dict before writing to log."""
-    # Scrub top-level string fields
-    for key in list(event_dict.keys()):
-        val = event_dict[key]
-        if isinstance(val, str):
-            event_dict[key] = scrub_text(val)
+    """Scrub PII recursively from the entire event dict before writing to log."""
+    return _scrub_value(event_dict)
 
-    # Scrub nested payload dict
-    payload = event_dict.get("payload")
-    if isinstance(payload, dict):
-        event_dict["payload"] = {
-            k: scrub_text(v) if isinstance(v, str) else v for k, v in payload.items()
-        }
-
-    return event_dict
 
 
 def configure_logging() -> None:

@@ -56,11 +56,6 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
-<<<<<<< HEAD
-    # Enrich logs with request context — bound to structlog contextvars so every
-    # subsequent log in this request automatically carries these fields.
-=======
->>>>>>> 969bdb69de026bf0e2910b1a4d924215a9399dbb
     bind_contextvars(
         user_id_hash=hash_user_id(body.user_id),
         session_id=body.session_id,
@@ -68,10 +63,7 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         model=agent.model,
         env=os.getenv("APP_ENV", "dev"),
     )
-<<<<<<< HEAD
 
-=======
->>>>>>> 969bdb69de026bf0e2910b1a4d924215a9399dbb
     log.info(
         "request_received",
         service="api",
