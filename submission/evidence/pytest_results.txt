@@ -48,4 +48,4 @@ app\main.py:25
     return self.router.on_event(event_type)
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 22 passed, 2 warnings in 2.40s ========================
+======================= 22 passed, 2 warnings in 3.82s ========================
