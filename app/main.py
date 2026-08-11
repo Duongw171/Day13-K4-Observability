@@ -21,6 +21,16 @@ app = FastAPI(title="Day 13 Observability Lab")
 app.add_middleware(CorrelationIdMiddleware)
 agent = LabAgent()
 
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    correlation_id = getattr(request.state, "correlation_id", "unknown")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": type(exc).__name__},
+        headers={"x-request-id": correlation_id},
+    )
 
 @app.on_event("startup")
 async def startup() -> None:
