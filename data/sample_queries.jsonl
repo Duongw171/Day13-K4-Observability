@@ -8,3 +8,8 @@
 {"user_id":"u08","session_id":"s08","feature":"qa","message":"How do I debug tail latency?"}
 {"user_id":"u09","session_id":"s09","feature":"qa","message":"What is the policy for PII and credit card 4111 1111 1111 1111?"}
 {"user_id":"u10","session_id":"s10","feature":"qa","message":"How should alerts be designed?"}
+{"user_id":"u11","session_id":"s11","feature":"monitoring","message":"What is P95 latency and why does it matter?"}
+{"user_id":"u12","session_id":"s12","feature":"monitoring","message":"Explain the difference between tracing and logging"}
+{"user_id":"u13","session_id":"s13","feature":"summary","message":"What are the key SLOs for an AI API service?"}
+{"user_id":"u14","session_id":"s14","feature":"qa","message":"How do I set up correlation IDs in a FastAPI app?"}
+{"user_id":"u15","session_id":"s15","feature":"qa","message":"Contact me at +84 90 123 4567 to discuss observability"}
