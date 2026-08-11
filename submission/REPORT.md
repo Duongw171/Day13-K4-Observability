@@ -3,7 +3,7 @@
 ## 1. Thông tin nhóm
 
 - Tên nhóm:
-- Repository URL: https://github.com/VinUni-AI20k/Day13-K4-Observability
+- Repository URL: https://github.com/Duongw171/Day13-K4-Observability
 - Commit SHA cuối: Nhóm cập nhật sau khi tích hợp các role
 - Thành viên và vai trò: **Bùi Công Hậu — Logging & PII**
 
@@ -54,4 +54,4 @@ Với mỗi thành viên, ghi rõ nhiệm vụ và link commit/PR tương ứng.
 
 | Thành viên | Phần việc | Commit/PR | Điều đã học |
 |---|---|---|---|
-| Bùi Công Hậu | Correlation middleware; log enrichment; recursive PII redaction; unit/integration tests; evidence Logging & PII | [`5a61e37`](https://github.com/VinUni-AI20k/Day13-K4-Observability/commit/5a61e37) | Cách cô lập context giữa các request, thứ tự processor trong structured logging, hashing định danh và kiểm chứng PII độc lập bằng validator |
+| Bùi Công Hậu | Correlation middleware; log enrichment; recursive PII redaction; unit/integration tests; evidence Logging & PII | [`5a61e37`](https://github.com/Duongw171/Day13-K4-Observability/commit/5a61e37) | Cách cô lập context giữa các request, thứ tự processor trong structured logging, hashing định danh và kiểm chứng PII độc lập bằng validator |
