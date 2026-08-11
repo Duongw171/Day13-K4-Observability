@@ -14,11 +14,13 @@ from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
 from .tracing import tracing_enabled
+from .dashboard_view import router as dashboard_router
 
 configure_logging()
 log = get_logger()
 app = FastAPI(title="Day 13 Observability Lab")
 app.add_middleware(CorrelationIdMiddleware)
+app.include_router(dashboard_router)
 agent = LabAgent()
 
 from fastapi.responses import JSONResponse
