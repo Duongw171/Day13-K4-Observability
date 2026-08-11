@@ -14,13 +14,25 @@ from .middleware import CorrelationIdMiddleware
 from .pii import hash_user_id, summarize_text
 from .schemas import ChatRequest, ChatResponse
 from .tracing import tracing_enabled
+from .dashboard_view import router as dashboard_router
 
 configure_logging()
 log = get_logger()
 app = FastAPI(title="Day 13 Observability Lab")
 app.add_middleware(CorrelationIdMiddleware)
+app.include_router(dashboard_router)
 agent = LabAgent()
 
+from fastapi.responses import JSONResponse
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    correlation_id = getattr(request.state, "correlation_id", "unknown")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": type(exc).__name__},
+        headers={"x-request-id": correlation_id},
+    )
 
 @app.on_event("startup")
 async def startup() -> None:
@@ -44,8 +56,11 @@ async def metrics() -> dict:
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: Request, body: ChatRequest) -> ChatResponse:
+<<<<<<< HEAD
     # Enrich logs with request context — bound to structlog contextvars so every
     # subsequent log in this request automatically carries these fields.
+=======
+>>>>>>> 969bdb69de026bf0e2910b1a4d924215a9399dbb
     bind_contextvars(
         user_id_hash=hash_user_id(body.user_id),
         session_id=body.session_id,
@@ -53,7 +68,10 @@ async def chat(request: Request, body: ChatRequest) -> ChatResponse:
         model=agent.model,
         env=os.getenv("APP_ENV", "dev"),
     )
+<<<<<<< HEAD
 
+=======
+>>>>>>> 969bdb69de026bf0e2910b1a4d924215a9399dbb
     log.info(
         "request_received",
         service="api",

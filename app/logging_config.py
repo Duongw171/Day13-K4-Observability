@@ -13,6 +13,23 @@ from .pii import scrub_text
 LOG_PATH = Path(os.getenv("LOG_PATH", "data/logs.jsonl"))
 
 
+def _scrub_value(value: Any) -> Any:
+    if isinstance(value, str):
+        return scrub_text(value)
+    if isinstance(value, dict):
+        return {
+            scrub_text(key) if isinstance(key, str) else key: _scrub_value(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_scrub_value(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_scrub_value(item) for item in value)
+    if isinstance(value, set):
+        return {_scrub_value(item) for item in value}
+    return value
+
+
 class JsonlFileProcessor:
     def __call__(self, logger: Any, method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
         LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -50,6 +67,7 @@ def configure_logging() -> None:
             scrub_event,  # PII scrubbing ACTIVE — runs before writing to file
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
+            scrub_event,
             JsonlFileProcessor(),
             structlog.processors.JSONRenderer(),
         ],

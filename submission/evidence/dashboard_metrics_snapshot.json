@@ -1,0 +1,178 @@
+{
+  "time_range_minutes": 60,
+  "refresh_seconds": 30,
+  "total_records": 120,
+  "incidents": {
+    "rag_slow": false,
+    "tool_fail": false,
+    "cost_spike": false
+  },
+  "panels": {
+    "latency": {
+      "id": "latency",
+      "title": "Latency percentiles",
+      "unit": "ms",
+      "p50": 3591.5,
+      "p95": 4952.25,
+      "p99": 6404.59,
+      "threshold": {
+        "operator": "lte",
+        "value": 3000,
+        "unit": "ms"
+      },
+      "status": "BREACH"
+    },
+    "traffic": {
+      "id": "traffic",
+      "title": "Request traffic",
+      "unit": "requests_per_minute",
+      "count": 54,
+      "rate_per_minute": 4.5,
+      "threshold": {
+        "operator": "gte",
+        "value": 1,
+        "unit": "req/m"
+      },
+      "status": "PASS"
+    },
+    "errors": {
+      "id": "errors",
+      "title": "Error rate and breakdown",
+      "unit": "percent",
+      "failed_count": 0,
+      "request_count": 54,
+      "error_rate_pct": 0.0,
+      "error_breakdown": {},
+      "threshold": {
+        "operator": "lte",
+        "value": 2.0,
+        "unit": "%"
+      },
+      "status": "PASS"
+    },
+    "cost": {
+      "id": "cost",
+      "title": "Cost over time",
+      "unit": "usd",
+      "total_cost_usd": 0.110856,
+      "threshold": {
+        "operator": "lte",
+        "value": 2.5,
+        "unit": "USD"
+      },
+      "status": "PASS"
+    },
+    "tokens": {
+      "id": "tokens",
+      "title": "Input and output tokens",
+      "unit": "tokens",
+      "tokens_in": 1792,
+      "tokens_out": 7032,
+      "total_tokens": 8824,
+      "threshold": {
+        "operator": "lte",
+        "value": 50000,
+        "unit": "tokens"
+      },
+      "status": "PASS"
+    },
+    "quality": {
+      "id": "quality",
+      "title": "Quality proxy",
+      "unit": "score_0_to_1",
+      "mean_quality_score": 0.878,
+      "threshold": {
+        "operator": "gte",
+        "value": 0.75,
+        "unit": "score"
+      },
+      "status": "PASS"
+    }
+  },
+  "chart_data": {
+    "labels": [
+      "07:56",
+      "08:03",
+      "08:21",
+      "08:22",
+      "08:24",
+      "08:25",
+      "08:32",
+      "08:34",
+      "08:35",
+      "08:36",
+      "08:40",
+      "08:41"
+    ],
+    "latency_p95": [
+      6548.35,
+      4952.25,
+      3587.0,
+      3649.8,
+      3611.5,
+      3704.3,
+      4952.25,
+      4952.25,
+      3617.5,
+      4358.7,
+      3597.0,
+      3631.8
+    ],
+    "latency_p50": [
+      4325.5,
+      3591.5,
+      3587.0,
+      3590.0,
+      3598.0,
+      3607.0,
+      3591.5,
+      3591.5,
+      3595.0,
+      3583.5,
+      3579.0,
+      3601.0
+    ],
+    "traffic": [
+      10,
+      0,
+      2,
+      12,
+      3,
+      7,
+      0,
+      0,
+      3,
+      7,
+      6,
+      4
+    ],
+    "cost": [
+      0.0194,
+      0.0,
+      0.0015,
+      0.0265,
+      0.0046,
+      0.0165,
+      0.0,
+      0.0,
+      0.0041,
+      0.0163,
+      0.011,
+      0.011
+    ],
+    "quality": [
+      0.88,
+      0.878,
+      0.9,
+      0.87,
+      0.85,
+      0.89,
+      0.878,
+      0.878,
+      0.85,
+      0.89,
+      0.86,
+      0.9
+    ]
+  }
+}
