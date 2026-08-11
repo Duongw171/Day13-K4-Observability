@@ -8,8 +8,8 @@
 - Thành viên và vai trò:
   - Bùi Công Hậu — Logging & PII
   - Nguyễn Anh Đức — Tracing & Prompt Version
-  - (tên) — Dashboard, SLO & Alert
-  - (tên) — Incident, Report & Demo
+  - Nguyễn Văn Tấn — Dashboard, SLO & Alert
+  - Nguyễn Văn Dương — Incident, Report & Demo
 
 ## 2. Kết quả kỹ thuật
 
@@ -49,7 +49,12 @@ Ghi chú về version 1 và version 2: hai version đầu dùng biến `{{questi
 ## 5. Dashboard, SLO và alerts
 
 - Kết quả `validate_dashboard.py`: **`HỢP LỆ: 6/6 panel`** (đáp ứng trọn vẹn contract `config/dashboard.yaml`).
-- Evidence dashboard: [`evidence/dashboard-slo.md`](evidence/dashboard-slo.md) và snapshot [`evidence/dashboard_metrics_snapshot.json`](evidence/dashboard_metrics_snapshot.json) — giao diện 6 panel tại `http://127.0.0.1:8000/dashboard` hiển thị đầy đủ Latency (P50/P95/P99), Traffic, Error breakdown, Cost, Token usage, Quality score kèm đường ngưỡng SLO.
+- Evidence dashboard:
+  - [`evidence/dashboard_baseline.png`](evidence/dashboard_baseline.png): Ảnh chụp toàn bộ 6 panel ở trạng thái bình thường (Baseline).
+  - [`evidence/dashboard_rag_slow.png`](evidence/dashboard_rag_slow.png): Ảnh chụp Dashboard khi kích hoạt sự cố `rag_slow`, panel Latency P95 tăng vọt $>3500\text{ ms}$ và chuyển trạng thái `[BREACH]`.
+  - [`evidence/dashboard-slo.md`](evidence/dashboard-slo.md): Báo cáo tổng hợp chi tiết phân tích và bảng mapping chỉ số.
+  - [`evidence/dashboard_metrics_snapshot.json`](evidence/dashboard_metrics_snapshot.json): Snapshot dữ liệu JSON xuất từ API metrics.
+  - Giao diện Dashboard trực tiếp: `http://127.0.0.1:8000/dashboard` (đọc trực tiếp từ `data/logs.jsonl`, tự động làm mới mỗi 30s, time range 60m).
 - SLO đã chọn và lý do:
   - `latency_p95_ms <= 3000ms` (Target 99.5%): Đảm bảo phản hồi nhanh cho trợ lý AI, tránh timeout giao diện.
   - `error_rate_pct <= 2.0%` (Target 99.0%): Duy trì độ tin cậy dịch vụ, hạn chế gián đoạn.
@@ -61,19 +66,38 @@ Ghi chú về version 1 và version 2: hai version đầu dùng biến `{{questi
 
 ## 6. Điều tra challenge
 
-- Challenge ID:
+- Challenge ID: `day13-k4-observability-v1` (Cohort K4)
 - Triệu chứng từ metrics:
+  - Latency tăng đột biến vượt ngưỡng cho phép: P95 latency toàn hệ thống vượt quá `latency_threshold_ms: 2000ms`, các request của challenge đạt mức từ **2651ms đến 4161ms** (tổng thời gian xử lý khi chạy đồng thời 5 request lên tới ~12.1s - 14.8s).
+  - Tỉ lệ lỗi (Error rate) không tăng (0%), nhưng thời gian phản hồi ở tính năng `feature: monitoring` bị trễ nghiêm trọng, gây nguy cơ breach SLO latency P95 (ngưỡng 3000ms).
 - Trace ID liên quan:
+  - Request 1 (`k4-challenge-s02`): Trace correlation ID `req-8b82ffef` (Latency: 4161ms).
+  - Request 2 (`k4-challenge-s05`): Trace correlation ID `req-6e2db2ce` (Latency: 2652ms).
+  - Request 3 (`k4-challenge-s03`): Trace correlation ID `req-522cef4f` (Latency: 2651ms).
+  - Request 4 (`k4-challenge-s01`): Trace correlation ID `req-030b9294` (Latency: 2651ms).
+  - Request 5 (`k4-challenge-s04`): Trace correlation ID `req-1b090979` (Latency: 2651ms).
 - Log line/correlation ID liên quan:
+  - Log kích hoạt incident:
+    `{"service": "control", "event": "incident_enabled", "payload": {"name": "rag_slow"}, "correlation_id": "req-48d2f4f0", "level": "warning", "ts": "2026-08-11T10:33:02.196381Z"}`
+  - Log request bị chậm tiêu biểu (`req-8b82ffef`):
+    `{"service": "api", "event": "response_sent", "correlation_id": "req-8b82ffef", "user_id_hash": "cb22af258a5e", "session_id": "k4-challenge-s02", "feature": "monitoring", "model": "claude-sonnet-4-5", "latency_ms": 4161, "tokens_in": 34, "tokens_out": 95, "cost_usd": 0.001527, "quality_score": 0.9, "level": "info", "ts": "2026-08-11T10:33:07.313166Z"}`
 - Root cause:
+  - Khi cờ incident `rag_slow` được bật trong hệ thống, hàm `retrieve()` tại [`app/mock_rag.py`](../app/mock_rag.py) thực thi lệnh `time.sleep(2.5)` mô phỏng sự cố nghẽn mạng / vector store database phản hồi chậm. Việc hàm retrieval bị trễ 2.5s dạng synchronous đã chặn (block) toàn bộ luồng xử lý của `LabAgent.run`, khiến thời gian xử lý của mỗi request bị kéo dài thêm ít nhất 2500ms, dẫn tới tail latency tăng vọt trên toàn bộ các request có sử dụng RAG.
 - Fix action:
+  - Tắt sự cố: Gửi lệnh `POST /incidents/rag_slow/disable` hoặc chạy `python scripts/inject_incident.py --scenario rag_slow --disable` để đưa hệ thống về trạng thái bình thường.
+  - Tối ưu hóa kỹ thuật dài hạn: Chuyển hàm `retrieve` sang cơ chế bất đồng bộ (`async def retrieve`) để không block event loop; cấu hình timeout nghiêm ngặt cho Vector DB (ví dụ 1000ms); thêm bộ nhớ đệm (caching) cho các query tài liệu lặp lại.
 - Preventive measure:
+  - Thiết lập Alert Rule cảnh báo sớm `high_latency_p95` (P95 > 2000ms duy trì trong 3 phút) gửi thông báo tới đội ngũ on-call.
+  - Áp dụng mẫu thiết kế Circuit Breaker: nếu module RAG/Vector DB vượt quá timeout 1.5s thì tự động ngắt và trả về fallback domain documents thay vì làm treo request của người dùng.
+  - Tách timeout và theo dõi riêng biệt cho từng span (Retriever timeout $\le 1000\text{ ms}$, LLM generation timeout $\le 2000\text{ ms}$).
 
 ## 7. Đóng góp cá nhân
 
 Với mỗi thành viên, ghi rõ nhiệm vụ và link commit/PR tương ứng.
 
-| Thành viên     | Phần việc                                                                                                                                                                                                 | Commit/PR                                                                       | Điều đã học                                                                                                                                                                                                                                                     |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bùi Công Hậu   | Correlation middleware; log enrichment; recursive PII redaction; unit/integration tests; evidence Logging & PII                                                                                           | [`5a61e37`](https://github.com/Duongw171/Day13-K4-Observability/commit/5a61e37) | Cách cô lập context giữa các request, thứ tự processor trong structured logging, hashing định danh và kiểm chứng PII độc lập bằng validator                                                                                                                     |
+| Thành viên | Phần việc | Commit/PR | Điều đã học |
+|---|---|---|---|
+| Bùi Công Hậu | Correlation middleware; log enrichment; recursive PII redaction; unit/integration tests; evidence Logging & PII | [`5a61e37`](https://github.com/Duongw171/Day13-K4-Observability/commit/5a61e37) | Cách cô lập context giữa các request, thứ tự processor trong structured logging, hashing định danh và kiểm chứng PII độc lập bằng validator |
 | Nguyễn Anh Đức | Prompt versioning trên Langfuse: tạo prompt `day13-chat`, phát hiện và sửa lỗi sai tên biến ở v1/v2, dựng v3 baseline và v4 candidate, thực hiện đổi label và rollback, thu thập evidence trace và prompt | [`4b29d1e`](https://github.com/Duongw171/Day13-K4-Observability/commit/4b29d1e) | Cách Langfuse quản lý prompt bất biến theo version và điều hướng bằng label; lỗi sai tên biến trong prompt không sinh exception nên chỉ phát hiện được bằng cách đối chiếu prompt sau compile; ảnh hưởng của prompt fetch timeout lên latency của toàn hệ thống |
+| Nguyễn Văn Tấn | Xây dựng Dashboard 6 panel tương tác trực tiếp (`app/dashboard_view.py`), cấu hình SLI/SLO (`config/slo.yaml`), định nghĩa 3 Alert rules symptom-based (`config/alert_rules.yaml`), viết Runbook chi tiết (`docs/alerts.md`), script xuất snapshot (`scripts/export_dashboard.py`) và thu thập evidence baseline / incident | [`3115e05`](https://github.com/Duongw171/Day13-K4-Observability/commit/3115e05) | Cách thiết kế cảnh báo dựa trên triệu chứng (symptom-based) thay vì nguyên nhân nội bộ, tính toán percentiles (P50, P95, P99) trên log streaming, cách ánh xạ dữ liệu thời gian thực từ logs sang biểu đồ và bảo vệ trải nghiệm người dùng bằng SLO |
+| Nguyễn Văn Dương | Phụ trách chạy inject incident & load test challenge chính thức (`config/challenge.json`), điều tra sự cố theo luồng Metrics → Traces → Logs, xác định root cause nghẽn tại module `mock_rag`, tổng hợp báo cáo và chuẩn bị kịch bản demo | [`6b9f99c`](https://github.com/Duongw171/Day13-K4-Observability/commit/6b9f99c) | Quy trình điều tra incident chuẩn: dùng metrics phát hiện khoảng thời gian bất thường, dùng trace waterfall khoanh vùng span chậm (RAG retrieve) và dùng logs với correlation ID làm bằng chứng root cause không thể chối cãi |
